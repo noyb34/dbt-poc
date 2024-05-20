@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: merged_episode
+    description: This table contains merged episode data
+    columns:
+      - name: uid
+        tests:
+          - unique
+          - not_null
+
+  - name: manifestation
+    description: This table contains manifestation data
+    columns:
+      - name: episode_uid
+        tests:
+          - relationships:
+              to: ref('episode')
+              field: uid
+
+
+
+# version: 2
+# models:
+#   - name: merged_episode
+#     tests:
+#       - unique:
+#           column_name: uid
+#       - not_null:
+#           column_name: manifestation_published_status
+#       - not_null:
+#           column_name: release_date
+#       - not_null:
+#           column_name: manifestation_title
+#     columns:
+#       - name: uid
+#         tests:
+#           - relationships:
+#               to: ref('episode')
+#               field: uid

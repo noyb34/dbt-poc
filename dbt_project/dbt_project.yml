@@ -1,0 +1,89 @@
+name: 'dbt_poc'
+version: '1.0'
+config-version: 2
+
+# Define the paths for different dbt components
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+
+# Specify the default target and configurations
+profile: 'dbt_poc'
+
+
+# Define the models configuration
+models:
+  dbt-poc:
+    # Configure the materialization for models
+    # this can be one of: view, table, incremental, ephemeral, or materialized view
+    materialized: table
+
+# Configure the seeds with the correct column types
+seeds:
+  dbt-poc:
+    episode:
+      +column_types:
+        uid: bigint
+        createdatetime: timestamp without time zone
+        updatedatetime: timestamp without time zone
+        structuraltype: text
+        referenttype: text
+        episodeclass: text
+        episodenumber: integer
+        title120: text
+        titleclass: text
+        titlelanguage: text
+        emm_episode_uid: text
+        emm_parent_uid: text
+        series_uid: bigint
+        season_uid: bigint
+        countryoforigin: text
+        primarygenre: text
+        secondarygenre: text
+        distribution_number: integer
+        approximate_length: text
+        eidrid: text
+        entity_type: text
+        primary_mode: text
+        primary_language: text
+        secondary_language: text
+        synopsisshort: text
+        synopsislong: text
+        published_status: text
+        deletedatetime: timestamp without time zone
+        is_deleted: boolean
+        title19: character varying
+    manifestation:
+      +column_types:
+        uid: bigint
+        createdatetime: timestamp without time zone
+        updatedatetime: timestamp without time zone
+        emm_manifestation_uid: text
+        episode_uid: bigint
+        parent_manifestation_id: bigint
+        manifestationclass: text
+        emm_parent_uid: text
+        title: text
+        entity_type: text
+        eidrid: text
+        structuraltype: text
+        referenttype: text
+        actual_length: text
+        edit_use: text
+        edit_class: text
+        audio_closedcaption: text
+        audio_type: text
+        video_vchip: text
+        video_ei: boolean
+        published_status: text
+        deletedatetime: timestamp without time zone
+        is_deleted: boolean
+        title_old: text
+        title_old2: text
+        video_hidef: text
+        additional_data_created_by: text
+        additional_data_updated_by: text
+        additional_data_deleted_by: text
+        additional_data_source: text
+        contentid_list: jsonb
+        release_date: timestamp without time zone

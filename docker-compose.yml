@@ -1,0 +1,253 @@
+x-airflow-common: &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.1}
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: "LocalExecutor"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW_DB_PROPERTIES: ""
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow_user:airflow_pass@postgres-dev/airflow_db
+    AIRFLOW__CORE__FERNET_KEY: ""
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    DB_HOST: ${AIRFLOW_DB_HOST:-postgres-dev}
+    DB_PORT: ${AIRFLOW_DB_PORT:-5432}
+    AIRFLOW_DB: ${AIRFLOW_DB:-airflow_db}
+    DB_USER: ${AIRFLOW_DB_USER:-airflow_user}
+    DB_SCHEME: ${AIRFLOW_DB_SCHEME:-postgresql+psycopg2}
+    DB_PASSWORD: ${AIRFLOW_DB_PASSWORD:-airflow_pass}
+    _AIRFLOW_DB_MIGRATE: ${_AIRFLOW_DB_MIGRATE}
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./config:/opt/airflow/config
+    - ./plugins:/opt/airflow/plugins
+    - ./dbt_project/seeds:/opt/airflow/seeds
+    - ./dbt_project/models:/opt/airflow/models
+    - ./dbt_project/profiles.yml:/opt/airflow/profiles.yml
+    - ./dbt_project/dbt_project.yml:/opt/airflow/dbt_project.yml
+
+  user: "${AIRFLOW_UID:-50000}:50000"
+  depends_on: &airflow-common-depends-on
+    postgres-dev:
+      condition: service_healthy
+  networks:
+    - dbt_project_net
+
+services:
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - dbt_project_net
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - dbt_project_net
+
+  airflow-triggerer:
+    <<: *airflow-common
+    command: triggerer
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - dbt_project_net
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    # yamllint disable rule:line-length
+    command:
+      - -c
+      - |
+        if [[ -z "${AIRFLOW_UID}" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
+          echo "If you are on Linux, you SHOULD follow the instructions below to set "
+          echo "AIRFLOW_UID environment variable, otherwise files will be owned by root."
+          echo "For other operating systems you can get rid of the warning with manually created .env file:"
+          echo "    See: https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#setting-the-right-airflow-user"
+          echo
+        fi
+        one_meg=1048576
+        mem_available=$$(($$(getconf _PHYS_PAGES) * $$(getconf PAGE_SIZE) / one_meg))
+        cpus_available=$$(grep -cE 'cpu[0-9]+' /proc/stat)
+        disk_available=$$(df / | tail -1 | awk '{print $$4}')
+        warning_resources="false"
+        if (( mem_available < 4000 )) ; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough memory available for Docker.\e[0m"
+          echo "At least 4GB of memory required. You have $$(numfmt --to iec $$((mem_available * one_meg)))"
+          echo
+          warning_resources="true"
+        fi
+        if (( cpus_available < 2 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough CPUS available for Docker.\e[0m"
+          echo "At least 2 CPUs recommended. You have $${cpus_available}"
+          echo
+          warning_resources="true"
+        fi
+        if (( disk_available < one_meg * 10 )); then
+          echo
+          echo -e "\033[1;33mWARNING!!!: Not enough Disk space available for Docker.\e[0m"
+          echo "At least 10 GBs recommended. You have $$(numfmt --to iec $$((disk_available * 1024 )))"
+          echo
+          warning_resources="true"
+        fi
+        if [[ $${warning_resources} == "true" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: You have not enough resources to run Airflow (see above)!\e[0m"
+          echo "Please follow the instructions to increase amount of resources available:"
+          echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
+          echo
+        fi
+        mkdir -p /sources/logs /sources/dags /sources/plugins
+        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
+        exec /entrypoint airflow version
+    # yamllint enable rule:line-length
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      _PIP_ADDITIONAL_REQUIREMENTS: ""
+    user: "0:0"
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}:/sources
+    networks:
+      - dbt_project_net
+
+  airflow-cli:
+    <<: *airflow-common
+    profiles:
+      - debug
+    environment:
+      <<: *airflow-common-env
+      CONNECTION_CHECK_MAX_COUNT: "0"
+    # Workaround for entrypoint issue. See: https://github.com/apache/airflow/issues/16252
+    command:
+      - bash
+      - -c
+      - airflow
+    networks:
+      - dbt_project_net
+
+  postgres-dev:
+    container_name: postgres-dev
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile_postgres
+    environment:
+      POSTGRES_DB: dev_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      PGDATA: "/data"
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata-dev:/data
+      - ./pg_config:/config/
+      # - ./pg_config:/var/lib/postgresql/data
+    networks:
+      - dbt_project_net
+    healthcheck:
+      test: psql -U user -tAc 'select 1' -d dev_db
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  postgres-staging:
+    container_name: postgres-staging
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile_postgres
+    environment:
+      POSTGRES_DB: staging_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-staging:/data
+      - ./pg_config:/config/
+    networks:
+      - dbt_project_net
+    healthcheck:
+      test: psql -U user -tAc 'select 1' -d staging_db
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  dbt:
+    container_name: dbt
+    build:
+      context: .
+      dockerfile: Dockerfile_dbt
+      target: dbt-postgres
+    environment:
+      DBT_PROFILES_DIR: /usr/app/dbt
+    volumes:
+      - ./dbt_project:/usr/app/dbt
+    ports:
+      - "8090:8090"
+    working_dir: /usr/app/dbt
+    networks:
+      - dbt_project_net
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+
+volumes:
+  pgdata-dev:
+  pgdata-staging:
+
+networks:
+  dbt_project_net:

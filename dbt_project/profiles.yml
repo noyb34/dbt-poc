@@ -1,0 +1,19 @@
+dbt_poc:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres-dev
+      user: user
+      password: password
+      port: 5432
+      dbname: dev_db
+      schema: public
+    staging:
+      type: postgres
+      host: postgres-staging
+      user: user
+      password: password
+      port: 5433
+      dbname: staging_db
+      schema: public
