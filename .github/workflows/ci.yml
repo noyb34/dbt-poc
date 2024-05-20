@@ -32,6 +32,6 @@ jobs:
         run: |
           cd dbt_project
           dbt deps
-          dbt seed --profiles-dir . 
-          dbt run --profiles-dir .
-          dbt test --profiles-dir .
+          dbt seed --profiles-dir . --profile dev
+          dbt run --profiles-dir . --profile dev
+          dbt test --profiles-dir . --profile dev
