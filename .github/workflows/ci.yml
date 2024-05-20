@@ -4,41 +4,53 @@ on: [push, pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     services:
       postgres:
         image: postgres:13
         ports:
-          - 5432:5432
+          - 5434:5432
         env:
+          POSTGRES_HOST: localhost
           POSTGRES_DB: dev_db
+          POSTGRES_SCHEMA: public
           POSTGRES_USER: user
           POSTGRES_PASSWORD: password
+          POSTGRES_THREADS: 4
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: local-fix
+        run: |
+          # Hack to get setup-python to work on act
+          # (see https://github.com/nektos/act/issues/251)
+          if [ ! -f "/etc/lsb-release" ] ; then
+            echo "DISTRIB_RELEASE=18.04" > /etc/lsb-release
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.x"
+          python-version: "3.9"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install dbt-postgres
-      - name: Wait for PostgreSQL to start
-        run: |
-          for i in {1..10}; do
-            pg_isready -h postgres -p 5432 && echo Success && exit 0
-            echo -n .
-            sleep 1
-          done
-          echo Failed waiting for PostgreSQL && exit 1
+          pip install dbt-core
+          dbt debug
+          dbt seed
+          dbt run
+          dbt test
       - name: Run dbt tests
         run: |
           cd dbt_project
           dbt deps
-          dbt seed --profiles-dir . 
-          dbt run --profiles-dir . 
-          dbt test --profiles-dir .
+          dbt seed --profile ci
+          dbt run --profiles ci
+          dbt test --profile ci
