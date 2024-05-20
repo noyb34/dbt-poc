@@ -9,7 +9,7 @@ jobs:
       postgres:
         image: postgres:13
         ports:
-          - 5434:5432
+          - 5432:5432
         env:
           POSTGRES_HOST: localhost
           POSTGRES_DB: dev_db
