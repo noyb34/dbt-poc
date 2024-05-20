@@ -40,19 +40,19 @@ You can run dbt commands directly using Docker Compose. Make sure to navigate to
 1. **Run dbt Seed to Load Sample Data:**
 
    ```sh
-   docker-compose run dbt dbt seed --profiles-dir /usr/app/dbt
+   docker-compose run dbt dbt seed
    ```
 
 2. **Run dbt Models to Perform Transformations:**
 
    ```sh
-   docker-compose run dbt dbt run --profiles-dir /usr/app/dbt
+   docker-compose run dbt dbt run 
    ```
 
 3. **Run dbt Tests to Validate Transformations:**
 
    ```sh
-   docker-compose run dbt dbt test --profiles-dir /usr/app/dbt
+   docker-compose run dbt dbt test
    ```
 
 ## Directory Structure
@@ -75,9 +75,7 @@ project-root/
 ├── pg_config/
 ├── plugins/
 ├── .gitignore
-├── airflow.cfg
 ├── docker-compose.yml
-├── Dockerfile_airflow
 ├── Dockerfile_dbt
 ├── Dockerfile_postgres
 ├── example.env
@@ -91,5 +89,3 @@ Place your Airflow DAGs in the `dags/` directory. Airflow will automatically pic
 ## License
 
 This project is licensed under the GPL-3.0 License. See the [LICENSE](./LICENSE) file for details.
-
----

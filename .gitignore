@@ -1,4 +1,4 @@
-./misc
+/misc/
 **/__pycache__
 **/*.pyc
 .DS_Store
