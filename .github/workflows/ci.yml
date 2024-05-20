@@ -27,11 +27,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install dbt-postgres
-
+      - name: Wait for PostgreSQL to start
+        run: |
+          for i in {1..10}; do
+            pg_isready -h postgres -p 5432 && echo Success && exit 0
+            echo -n .
+            sleep 1
+          done
+          echo Failed waiting for PostgreSQL && exit 1
       - name: Run dbt tests
         run: |
           cd dbt_project
           dbt deps
-          dbt seed --profiles-dir . --profile dev
-          dbt run --profiles-dir . --profile dev
-          dbt test --profiles-dir . --profile dev
+          dbt seed --profiles-dir . 
+          dbt run --profiles-dir . 
+          dbt test --profiles-dir .
