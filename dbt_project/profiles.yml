@@ -3,7 +3,7 @@ dbt_poc:
   outputs:
     dev:
       type: postgres
-      host: postgres-dev
+      host: postgres
       user: user
       password: password
       port: 5432
@@ -11,7 +11,7 @@ dbt_poc:
       schema: public
     staging:
       type: postgres
-      host: postgres-staging
+      host: postgres
       user: user
       password: password
       port: 5433
