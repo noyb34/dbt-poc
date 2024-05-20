@@ -1,5 +1,3 @@
-Let's update the README file with the correct directory structure based on the latest screenshot you provided.
-
 # dbt-Airflow-POC
 
 This repository provides a proof-of-concept (POC) for using dbt (data build tool) and Airflow to manage data transformations across two PostgreSQL environments (`dev` and `staging`) using CI/CD practices with GitHub Actions and Airflow orchestration.
