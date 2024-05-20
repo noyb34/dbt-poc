@@ -11,7 +11,7 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_HOST: localhost
+          POSTGRES_HOST: postgres-dev
           POSTGRES_DB: dev_db
           POSTGRES_SCHEMA: public
           POSTGRES_USER: user
