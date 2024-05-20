@@ -1,0 +1,8 @@
+./misc
+**/__pycache__
+**/*.pyc
+.DS_Store
+.idea
+.vscode
+./logs/*.*
+./tests/.user.yml

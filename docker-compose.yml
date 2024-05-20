@@ -244,6 +244,8 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - dbt_project_net
 
 volumes:
   pgdata-dev:
