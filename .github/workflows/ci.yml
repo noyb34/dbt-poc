@@ -46,7 +46,7 @@ jobs:
       - name: Run dbt tests
         run: |
           cd dbt_project
-          dbt deps --profile ci
-          dbt seed --profile ci
-          dbt run  --profiles ci
-          dbt test --profile ci
+          dbt deps --profile ci --profiles-dir .
+          dbt seed --profile ci --profiles-dir .
+          dbt run --profile ci --profiles-dir .
+          dbt test --profile ci --profiles-dir .
