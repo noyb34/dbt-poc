@@ -15,7 +15,8 @@ x-airflow-common: &airflow-common
     DB_USER: ${AIRFLOW_DB_USER:-airflow_user}
     DB_SCHEME: ${AIRFLOW_DB_SCHEME:-postgresql+psycopg2}
     DB_PASSWORD: ${AIRFLOW_DB_PASSWORD:-airflow_pass}
-    _AIRFLOW_DB_MIGRATE: ${_AIRFLOW_DB_MIGRATE}
+    _AIRFLOW_DB_MIGRATE: ${_AIRFLOW_DB_MIGRATE:-true}
+    _AIRFLOW_UID: ${AIRFLOW_UID:-50000}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
@@ -26,7 +27,7 @@ x-airflow-common: &airflow-common
     - ./dbt_project/profiles.yml:/opt/airflow/profiles.yml
     - ./dbt_project/dbt_project.yml:/opt/airflow/dbt_project.yml
 
-  user: "${AIRFLOW_UID:-50000}:50000"
+  user: "${AIRFLOW_UID:-50000}:0"
   depends_on: &airflow-common-depends-on
     postgres-dev:
       condition: service_healthy
