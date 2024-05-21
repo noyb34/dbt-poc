@@ -5,11 +5,9 @@ config-version: 2
 # Define the paths for different dbt components
 model-paths: ["models"]
 seed-paths: ["seeds"]
-test-paths: ["tests"]
 
 # Specify the default target and configurations
 profile: 'dbt_poc'
-
 
 # Define the models configuration
 models:

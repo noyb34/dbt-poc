@@ -26,3 +26,11 @@ dbt_poc:
       port: 5432
       dbname: dev_db
       schema: public 
+    cd:
+      type: postgres
+      host: localhost
+      user: user
+      password: password
+      port: 5432
+      dbname: staging_db
+      schema: public

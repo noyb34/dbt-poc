@@ -1,0 +1,10 @@
+version: 2
+seeds:
+  - name: episode
+    description: This table contains episode seed data
+    columns:
+      - name: uid
+        tests:
+          - relationships:
+              to: ref('manifestation')
+              field: episode_uid

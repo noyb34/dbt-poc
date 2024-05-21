@@ -16,6 +16,7 @@ jobs:
         ports:
           - 5432:5432
         env:
+          POSTGRES_HOST: localhost
           POSTGRES_DB: staging_db
           POSTGRES_USER: user
           POSTGRES_PASSWORD: password
@@ -36,8 +37,9 @@ jobs:
       - name: Deploy to staging
         env:
           DBT_PROFILES_DIR: ${{ github.workspace }}/dbt_project
+          DBT_TARGET: cd
         run: |
           dbt deps
-          dbt seed --profiles-dir dbt_project --target staging
-          dbt run --profiles-dir dbt_project --target staging
-          dbt test --profiles-dir dbt_project --target staging
+          dbt seed
+          dbt run
+          dbt test
