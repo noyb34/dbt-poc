@@ -8,7 +8,7 @@ models:
         tests:
           - unique
           - not_null
-
+seeds:
   - name: manifestation
     description: This table contains manifestation data
     columns:

@@ -1,14 +1,7 @@
 dbt_poc:
   target: dev
   outputs:
-    ci:
-      type: postgres
-      host: localhost
-      user: user
-      password: password
-      port: 5432
-      dbname: dev_db
-      schema: public
+    
     dev:
       type: postgres
       host: postgres-dev
@@ -25,5 +18,11 @@ dbt_poc:
       port: 5433
       dbname: staging_db
       schema: public
-
-    
+    ci:
+      type: postgres
+      host: localhost
+      user: user
+      password: password
+      port: 5432
+      dbname: dev_db
+      schema: public 

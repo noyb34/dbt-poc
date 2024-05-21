@@ -44,9 +44,12 @@ jobs:
           pip install dbt-postgres
 
       - name: Run dbt tests
+        env:
+          DBT_PROFILE: dbt_poc
+          DBT_TARGET: ci
         run: |
           cd dbt_project
           dbt deps --profiles-dir .
           dbt seed --profiles-dir .
-          dbt run  --profiles-dir .
+          dbt run --profiles-dir .
           dbt test --profiles-dir .
