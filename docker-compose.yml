@@ -186,9 +186,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./pgdata-dev:/data
+      - pgdata-dev:/data
       - ./pg_config:/config/
-      # - ./pg_config:/var/lib/postgresql/data
+     
     networks:
       - dbt_project_net
     healthcheck:
